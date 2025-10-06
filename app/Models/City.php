@@ -1,64 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Models;
 
-use App\Http\Controllers\Controller;
-use App\Models\City;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class CityController extends Controller
+class City extends Model
 {
-    public function index(Request $request)
+    use HasFactory;
+
+    protected $fillable = ['name', 'county_id'];
+
+    public function county()
     {
-        $query = City::with('county');
-
-        if ($request->has('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
-        }
-
-        if ($request->has('county_id')) {
-            $query->where('county_id', $request->county_id);
-        }
-
-        $perPage = $request->get('per_page', 15);
-        return response()->json($query->paginate($perPage));
+        return $this->belongsTo(County::class);
     }
 
-    public function store(Request $request)
+    public function postalCodes()
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'county_id' => 'required|exists:counties,id',
-        ]);
-
-        $city = City::create($validated);
-        $city->load('county');
-
-        return response()->json($city, 201);
-    }
-
-    public function show(City $city)
-    {
-        $city->load('county', 'postalCodes');
-        return response()->json($city);
-    }
-
-    public function update(Request $request, City $city)
-    {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'county_id' => 'sometimes|required|exists:counties,id',
-        ]);
-
-        $city->update($validated);
-        $city->load('county');
-
-        return response()->json($city);
-    }
-
-    public function destroy(City $city)
-    {
-        $city->delete();
-        return response()->json(['message' => 'City deleted successfully'], 200);
+        return $this->hasMany(PostalCode::class);
     }
 }
