@@ -1,0 +1,16 @@
+{
+  "name": "Laravel Postal Code API",
+  "version": "1.0.0",
+  "description": "Hungarian Postal Codes REST API Documentation",
+  "title": "Postal Code API",
+  "url": "http://localhost:8000",
+  "sampleUrl": "http://localhost:8000",
+  "header": {
+    "title": "Bevezetés",
+    "content": "<p>Ez a dokumentáció a Magyar Irányítószám API végpontjait írja le.</p>\n<p>Az autentikált végpontokhoz Laravel Sanctum Bearer token szükséges.</p>\n<p><strong>Token megszerzése:</strong></p>\n<ol>\n<li>POST /api/register vagy POST /api/login</li>\n<li>Válaszban kapott token használata: <code>Authorization: Bearer {token}</code></li>\n</ol>"
+  },
+  "footer": {
+    "title": "Fejlesztő",
+    "content": "<p>Készítette: Ba ma gx</p>"
+  }
+}
