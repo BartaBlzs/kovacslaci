@@ -10,24 +10,43 @@ use Illuminate\Http\JsonResponse;
 class CountyController extends Controller
 {
     /**
-     * Összes megye listázása (lapozással és szűréssel)
+     * @api {get} /api/counties List all counties
+     * @apiName GetCounties
+     * @apiGroup County
+     * @apiVersion 1.0.0
      * 
-     * GET /api/counties
-     * Query paraméterek: name, per_page
+     * @apiQuery {String} [name] Filter by county name (partial match)
+     * @apiQuery {Number{1-100}} [per_page=15] Items per page
      * 
-     * @param Request $request
-     * @return JsonResponse
+     * @apiSuccess {Object[]} data List of counties
+     * @apiSuccess {Number} data.id County ID
+     * @apiSuccess {String} data.name County name
+     * @apiSuccess {String} data.created_at Creation timestamp
+     * @apiSuccess {String} data.updated_at Update timestamp
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "data": [
+     *         {
+     *           "id": 1,
+     *           "name": "Budapest",
+     *           "created_at": "2024-01-01T12:00:00.000000Z",
+     *           "updated_at": "2024-01-01T12:00:00.000000Z"
+     *         }
+     *       ],
+     *       "links": {...},
+     *       "meta": {...}
+     *     }
      */
     public function index(Request $request): JsonResponse
     {
         $query = County::query();
 
-        // Szűrés név alapján
         if ($request->has('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
         }
 
-        // Lapozás
         $perPage = $request->get('per_page', 15);
         $counties = $query->paginate($perPage);
 
@@ -35,13 +54,33 @@ class CountyController extends Controller
     }
 
     /**
-     * Új megye létrehozása
+     * @api {post} /api/counties Create new county
+     * @apiName CreateCounty
+     * @apiGroup County
+     * @apiVersion 1.0.0
+     * @apiPermission authenticated
      * 
-     * POST /api/counties
-     * Body: { "name": "Megye név" }
+     * @apiHeader {String} Authorization Bearer token
      * 
-     * @param Request $request
-     * @return JsonResponse
+     * @apiBody {String} name County name (unique, max 255 chars)
+     * 
+     * @apiSuccess {String} message Success message
+     * @apiSuccess {Object} data County data
+     * @apiSuccess {Number} data.id County ID
+     * @apiSuccess {String} data.name County name
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 201 Created
+     *     {
+     *       "message": "County created successfully",
+     *       "data": {
+     *         "id": 1,
+     *         "name": "Budapest"
+     *       }
+     *     }
+     * 
+     * @apiError (Error 401) Unauthorized Missing or invalid token
+     * @apiError (Error 422) ValidationError Invalid input data
      */
     public function store(Request $request): JsonResponse
     {
@@ -58,16 +97,32 @@ class CountyController extends Controller
     }
 
     /**
-     * Egy megye megtekintése (településekkel együtt)
+     * @api {get} /api/counties/:id Get county details
+     * @apiName GetCounty
+     * @apiGroup County
+     * @apiVersion 1.0.0
      * 
-     * GET /api/counties/{id}
+     * @apiParam {Number} id County ID
      * 
-     * @param County $county
-     * @return JsonResponse
+     * @apiSuccess {Object} data County data with cities
+     * @apiSuccess {Number} data.id County ID
+     * @apiSuccess {String} data.name County name
+     * @apiSuccess {Object[]} data.cities List of cities in this county
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "data": {
+     *         "id": 1,
+     *         "name": "Budapest",
+     *         "cities": [...]
+     *       }
+     *     }
+     * 
+     * @apiError (Error 404) NotFound County not found
      */
     public function show(County $county): JsonResponse
     {
-        // Betöltjük a kapcsolódó településeket
         $county->load('cities');
 
         return response()->json([
@@ -76,14 +131,34 @@ class CountyController extends Controller
     }
 
     /**
-     * Megye adatainak módosítása
+     * @api {put} /api/counties/:id Update county
+     * @apiName UpdateCounty
+     * @apiGroup County
+     * @apiVersion 1.0.0
+     * @apiPermission authenticated
      * 
-     * PUT /api/counties/{id}
-     * Body: { "name": "Új megye név" }
+     * @apiHeader {String} Authorization Bearer token
      * 
-     * @param Request $request
-     * @param County $county
-     * @return JsonResponse
+     * @apiParam {Number} id County ID
+     * 
+     * @apiBody {String} [name] County name (unique, max 255 chars)
+     * 
+     * @apiSuccess {String} message Success message
+     * @apiSuccess {Object} data Updated county data
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "message": "County updated successfully",
+     *       "data": {
+     *         "id": 1,
+     *         "name": "Budapest"
+     *       }
+     *     }
+     * 
+     * @apiError (Error 401) Unauthorized Missing or invalid token
+     * @apiError (Error 404) NotFound County not found
+     * @apiError (Error 422) ValidationError Invalid input data
      */
     public function update(Request $request, County $county): JsonResponse
     {
@@ -100,12 +175,27 @@ class CountyController extends Controller
     }
 
     /**
-     * Megye törlése
+     * @api {delete} /api/counties/:id Delete county
+     * @apiName DeleteCounty
+     * @apiGroup County
+     * @apiVersion 1.0.0
+     * @apiPermission authenticated
      * 
-     * DELETE /api/counties/{id}
+     * @apiHeader {String} Authorization Bearer token
      * 
-     * @param County $county
-     * @return JsonResponse
+     * @apiParam {Number} id County ID
+     * 
+     * @apiSuccess {String} message Success message
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "message": "County deleted successfully"
+     *     }
+     * 
+     * @apiError (Error 401) Unauthorized Missing or invalid token
+     * @apiError (Error 404) NotFound County not found
+     * @apiError (Error 400) BadRequest Cannot delete county with associated cities
      */
     public function destroy(County $county): JsonResponse
     {
@@ -124,12 +214,29 @@ class CountyController extends Controller
     }
 
     /**
-     * Megye statisztikák lekérése
+     * @api {get} /api/counties/:id/stats Get county statistics
+     * @apiName GetCountyStats
+     * @apiGroup County
+     * @apiVersion 1.0.0
      * 
-     * GET /api/counties/{id}/stats
+     * @apiParam {Number} id County ID
      * 
-     * @param County $county
-     * @return JsonResponse
+     * @apiSuccess {Object} data Statistics data
+     * @apiSuccess {String} data.county County name
+     * @apiSuccess {Number} data.cities_count Number of cities
+     * @apiSuccess {Number} data.postal_codes_count Number of postal codes
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "data": {
+     *         "county": "Budapest",
+     *         "cities_count": 23,
+     *         "postal_codes_count": 215
+     *       }
+     *     }
+     * 
+     * @apiError (Error 404) NotFound County not found
      */
     public function stats(County $county): JsonResponse
     {
