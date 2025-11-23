@@ -11,10 +11,35 @@ use App\Models\User;
 class AuthController extends Controller
 {
     /**
-     * Felhasználó regisztrációja
+     * @api {post} /api/register Register new user
+     * @apiName Register
+     * @apiGroup Auth
+     * @apiVersion 1.0.0
      * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @apiBody {String} name User name (max 255 chars)
+     * @apiBody {String} email Email address (unique)
+     * @apiBody {String} password Password (min 8 chars)
+     * @apiBody {String} password_confirmation Password confirmation
+     * 
+     * @apiSuccess {String} message Success message
+     * @apiSuccess {Object} user User data
+     * @apiSuccess {String} token Access token
+     * @apiSuccess {String} token_type Token type (Bearer)
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 201 Created
+     *     {
+     *       "message": "User registered successfully",
+     *       "user": {
+     *         "id": 1,
+     *         "name": "John Doe",
+     *         "email": "john@example.com"
+     *       },
+     *       "token": "1|abcdef...",
+     *       "token_type": "Bearer"
+     *     }
+     * 
+     * @apiError (Error 422) ValidationError Invalid input data
      */
     public function register(Request $request)
     {
@@ -41,10 +66,33 @@ class AuthController extends Controller
     }
 
     /**
-     * Felhasználó bejelentkezése
+     * @api {post} /api/login Login user
+     * @apiName Login
+     * @apiGroup Auth
+     * @apiVersion 1.0.0
      * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @apiBody {String} email Email address
+     * @apiBody {String} password Password
+     * 
+     * @apiSuccess {String} message Success message
+     * @apiSuccess {Object} user User data
+     * @apiSuccess {String} token Access token
+     * @apiSuccess {String} token_type Token type (Bearer)
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "message": "Login successful",
+     *       "user": {
+     *         "id": 1,
+     *         "name": "John Doe",
+     *         "email": "john@example.com"
+     *       },
+     *       "token": "2|ghijkl...",
+     *       "token_type": "Bearer"
+     *     }
+     * 
+     * @apiError (Error 422) ValidationError Invalid credentials
      */
     public function login(Request $request)
     {
@@ -61,9 +109,6 @@ class AuthController extends Controller
             ]);
         }
 
-        // Töröljük a régi tokeneket (opcionális)
-        // $user->tokens()->delete();
-
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -75,18 +120,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Felhasználó kijelentkezése
+     * @api {post} /api/logout Logout user
+     * @apiName Logout
+     * @apiGroup Auth
+     * @apiVersion 1.0.0
+     * @apiPermission authenticated
      * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @apiHeader {String} Authorization Bearer token
+     * 
+     * @apiSuccess {String} message Success message
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "message": "Logged out successfully"
+     *     }
+     * 
+     * @apiError (Error 401) Unauthorized Missing or invalid token
      */
     public function logout(Request $request)
     {
-        // Aktuális token törlése
         $request->user()->currentAccessToken()->delete();
-
-        // VAGY: Összes token törlése
-        // $request->user()->tokens()->delete();
 
         return response()->json([
             'message' => 'Logged out successfully'
@@ -94,10 +148,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Bejelentkezett felhasználó adatainak lekérése
+     * @api {get} /api/user Get current user
+     * @apiName GetUser
+     * @apiGroup Auth
+     * @apiVersion 1.0.0
+     * @apiPermission authenticated
      * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @apiHeader {String} Authorization Bearer token
+     * 
+     * @apiSuccess {Object} user Current user data
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "user": {
+     *         "id": 1,
+     *         "name": "John Doe",
+     *         "email": "john@example.com"
+     *       }
+     *     }
+     * 
+     * @apiError (Error 401) Unauthorized Missing or invalid token
      */
     public function user(Request $request)
     {
