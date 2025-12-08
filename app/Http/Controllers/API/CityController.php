@@ -61,4 +61,28 @@ class CityController extends Controller
         $city->delete();
         return response()->json(['message' => 'City deleted successfully'], 200);
     }
+
+    /**
+     * Kezdőbetűk lekérése megyénként
+     */
+    public function getStartingLetters(Request $request)
+    {
+        $countyId = $request->get('county_id');
+        
+        if (!$countyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'county_id parameter is required'
+            ], 400);
+        }
+        
+        $letters = City::where('county_id', $countyId)
+            ->selectRaw('UPPER(SUBSTRING(name, 1, 1)) as letter')
+            ->distinct()
+            ->orderBy('letter')
+            ->pluck('letter')
+            ->values();
+        
+        return response()->json($letters, 200);
+    }
 }

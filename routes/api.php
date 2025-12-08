@@ -15,6 +15,7 @@ Route::get('/counties', [CountyController::class, 'index']);
 Route::get('/counties/{county}', [CountyController::class, 'show']);
 
 Route::get('/cities', [CityController::class, 'index']);
+Route::get('/cities/starting-letters', [CityController::class, 'getStartingLetters']);
 Route::get('/cities/{city}', [CityController::class, 'show']);
 
 Route::get('/postal-codes', [PostalCodeController::class, 'index']);
